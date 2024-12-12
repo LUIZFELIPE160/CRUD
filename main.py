@@ -1,12 +1,12 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTreeWidgetItem
 from PyQt5.QtCore import QDate
-from cadastro import Ui_MainWindow  #CHAMANDO A PASTA E IMPORTANDO A CLASS DA INTERFACE GRÁFICA
+from cadastro import Ui_MainWindow  #CHAMANDO O ARQUIVO E IMPORTANDO A CLASS DA INTERFACE GRÁFICA
 import database #IMPORT DO BANCO DE DADOS
 
 
 class MainWindow(QMainWindow, Ui_MainWindow): 
-    def __init__(self) -> None:  # 
+    def __init__(self) -> None:  
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
@@ -18,15 +18,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #MOSTRANDO RESULTADO NA TELA
         self.tw_funcionarios.itemSelectionChanged.connect(self.selecionar_item)
         self.mostrar()
-
+    
+    def formatar_cpf(self, cpf: str)->str:
+            cpf = cpf.strip()
+            # Verifica se o CPF tem exatamente 11 dígitos
+            if len(cpf) != 11 or not cpf.isdigit():
+                raise ValueError("CPF inválido! Deve conter exatamente 11 números.")
+            
+            return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
+    
     def adicionar_func(self):
-        cpf = self.l_cpf.text()
+        cpf = self.l_cpf.text() 
         nome = self.l_nome.text()
-        idade = int(self.l_idade.text())
+        idade = self.l_idade.text()
         funcao = self.l_funcao.text()
         admissao = self.l_date.date().toString('yyyy-MM-dd')
         remuneracao = self.l_remuneracao.text()
         observacoes = self.l_observacao.text()
+
+        try:
+            cpf = self.formatar_cpf(cpf)
+        except ValueError as e:
+            msg = QMessageBox()
+            msg.setWindowTitle('Erro')
+            msg.setText(str(e))
+            msg.exec()
+            return
+        
+        try:
+            idade = int(idade)
+        except ValueError:
+            msg = QMessageBox()
+            msg.setWindowTitle('Erro')
+            msg.setText('idade inválida! Por favor insira um número inteiro')
+            msg.exec()
+            return
 
         if database.cpf_exists(cpf): # VERIFICA NO BANCO SE JA EXISTE TAL PESSOA 
             msg = QMessageBox()
